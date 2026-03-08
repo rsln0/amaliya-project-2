@@ -12,22 +12,14 @@ html,body{width:100%;height:100%;overflow:hidden}
 body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
 
 #confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:9000}
-
 .spark{position:fixed;pointer-events:none;z-index:9999;animation:sparkPop .6s ease-out forwards}
-@keyframes sparkPop{
-  0%{opacity:1;transform:scale(.2) translateY(0)}
-  100%{opacity:0;transform:scale(2.5) translateY(-50px)}
-}
+@keyframes sparkPop{0%{opacity:1;transform:scale(.2) translateY(0)}100%{opacity:0;transform:scale(2.5) translateY(-50px)}}
 
-/* ════════════════════════════════
-   PAGES
-════════════════════════════════ */
+/* ════ PAGES ════ */
 .page{
   position:fixed;inset:0;
-  transition:opacity .85s ease, transform .85s cubic-bezier(.4,0,.2,1);
-  will-change:transform,opacity;
-  pointer-events:none;
-  opacity:0;
+  transition:opacity .85s ease,transform .85s cubic-bezier(.4,0,.2,1);
+  will-change:transform,opacity;pointer-events:none;opacity:0;
 }
 .page.active{pointer-events:auto;opacity:1 !important;transform:translateX(0) !important}
 
@@ -51,9 +43,7 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
   background:radial-gradient(ellipse at 50% 50%,#fef6f0,#fdf3f7 60%,#fef9f9);
 }
 
-/* ════════════════════════════════
-   GIFT BOX
-════════════════════════════════ */
+/* ════ GIFT BOX ════ */
 #giftSVG{
   width:min(70vmin,460px);height:auto;overflow:visible;
   filter:drop-shadow(0 26px 58px rgba(110,30,45,.17)) drop-shadow(0 5px 13px rgba(110,30,45,.08));
@@ -66,7 +56,6 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
 #ribH.gone{transform:translateY(340px);opacity:0}
 #bowEl{transition:transform 1s cubic-bezier(.3,0,.2,1),opacity .9s;transform-box:fill-box;transform-origin:center}
 #bowEl.gone{transform:translateY(-50px) scale(.15);opacity:0}
-
 #boxHint{
   position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
   font-size:10px;letter-spacing:4px;text-transform:uppercase;
@@ -75,9 +64,7 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
 }
 #boxHint.off{opacity:0}
 
-/* ════════════════════════════════
-   BOUQUET
-════════════════════════════════ */
+/* ════ BOUQUET ════ */
 .bq-img-wrap{
   width:min(87vmin,600px);flex-shrink:0;margin-bottom:70px;
   opacity:0;transform:scale(.92) translateY(12px);
@@ -89,10 +76,7 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
   filter:drop-shadow(0 20px 52px rgba(110,30,45,.24));
   animation:gentleHover 5s ease-in-out infinite;
 }
-@keyframes gentleHover{
-  0%,100%{transform:translateY(0) rotate(-.8deg)}
-  50%{transform:translateY(-10px) rotate(.8deg)}
-}
+@keyframes gentleHover{0%,100%{transform:translateY(0) rotate(-.8deg)}50%{transform:translateY(-10px) rotate(.8deg)}}
 
 #bouquetMsg{
   position:absolute;bottom:0;left:0;right:0;padding:22px 20px 32px;text-align:center;
@@ -106,7 +90,6 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
   font-style:italic;font-weight:300;color:#7a3a48;letter-spacing:.5px;line-height:1.45;
 }
 
-/* Arrow to letter */
 #arrowBtn{
   position:absolute;bottom:28px;right:28px;
   width:50px;height:50px;border-radius:50%;
@@ -121,173 +104,163 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
 #arrowBtn:hover{background:linear-gradient(135deg,#ea8090,#c04060)}
 #arrowBtn svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
 
-/* Back button */
 #backBtn{
   position:absolute;top:24px;left:24px;
   background:none;border:none;cursor:pointer;
-  display:flex;align-items:center;gap:7px;
-  color:#b07080;font-family:'Jost',sans-serif;
-  font-size:10px;letter-spacing:3px;text-transform:uppercase;font-weight:300;
+  display:flex;align-items:center;gap:7px;color:#b07080;
+  font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;
+  text-transform:uppercase;font-weight:300;
   opacity:0;transition:opacity .6s ease .4s;pointer-events:none;
 }
 #pageLetter.active #backBtn{opacity:1;pointer-events:auto}
 #backBtn:hover{color:#7a3a48}
 #backBtn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
-/* ════════════════════════════════
-   LETTER — folded in half
-   
-   Concept:
-   - The "paper" is one sheet, visually split at the fold line (middle).
-   - Bottom half = always visible (front bottom of folded letter).
-   - Top half = starts folded down ON TOP of the bottom half (rotateX 180°
-     around the fold = the shared bottom edge of the top half).
-   - On click → top half rotates back to 0° = letter opens flat.
+/* ════════════════════════════════════════════════
+   LETTER — true fold-in-half
 
-   We wrap everything in a perspective container.
-   The fold line is the border between #halfBottom and #halfTop.
-════════════════════════════════ */
+   DOM layout (top → bottom in document order):
 
-/* Hint below letter */
+   #letterScene   (perspective container, cursor:pointer)
+   └─ #halfTopOuter   ← rotates around its BOTTOM edge
+      └─ #halfTop     ← front face: letter text (backface-hidden)
+      └─ #halfTopBack ← back face:  blank paper (backface-hidden, pre-rotated 180°)
+   └─ #foldLine    ← decorative crease
+   └─ #halfBottom  ← always flat, never moves, shows seal ♡
+
+   Initial state:
+     #halfTopOuter  rotateX(180deg)  → folded face-down ON TOP of bottom half.
+     Because the element is rotated 180° around its bottom edge, it sits
+     exactly covering #halfBottom.  The BACK face (#halfTopBack) is now
+     facing the viewer (that's the blank pink paper side you see).
+     The FRONT face (#halfTop with text) is face-down, hidden.
+
+   After click:
+     #halfTopOuter  rotateX(0deg)    → standing upright above the fold.
+     Now the FRONT face (text) faces the viewer. Done.
+
+   KEY FIX for "text visible before unfold":
+     #halfTop  has  backface-visibility:hidden  → invisible when face-down.
+     #halfTopBack  has  backface-visibility:hidden + rotateX(180deg) applied
+     on the ELEMENT (not the parent) → visible only when parent is at 180°.
+════════════════════════════════════════════════ */
+
 #letterHint{
-  margin-top:18px;
+  margin-top:20px;
   font-size:10px;letter-spacing:3.5px;text-transform:uppercase;
-  color:#c09090;font-weight:300;
-  transition:opacity .5s;
-  pointer-events:none;
+  color:#c09090;font-weight:300;transition:opacity .5s;pointer-events:none;
 }
 #letterHint.off{opacity:0}
 
-/* Perspective wrapper — centred on page */
-#letterWrap{
-  perspective:1400px;
-  perspective-origin:50% 100%; /* hinge at bottom of top half = fold line */
-  width:min(300px,82vw);
+/* Perspective wrapper */
+#letterScene{
+  perspective:1600px;
+  perspective-origin:50% 100%;
+  /* wider letter */
+  width:min(480px, 88vw);
   cursor:pointer;
-  /* entrance animation */
   opacity:0;transform:translateY(32px) scale(.94);
-  transition:opacity .7s ease .35s, transform .7s ease .35s;
+  transition:opacity .7s ease .35s,transform .7s ease .35s;
 }
-#pageLetter.active #letterWrap{opacity:1;transform:translateY(0) scale(1)}
+#pageLetter.active #letterScene{opacity:1;transform:translateY(0) scale(1)}
 
-/* Paper texture shared */
-.half{
-  width:100%;
-  background:#fffaf6;
-  border-left:1px solid rgba(180,115,125,.15);
-  border-right:1px solid rgba(180,115,125,.15);
-  position:relative;
-  overflow:hidden;
-}
-
-/* ── BOTTOM HALF (always flat, never moves) ── */
-#halfBottom{
-  /* height set to match halfTop so together they look like one sheet */
-  min-height:160px;
-  border-bottom:1px solid rgba(180,115,125,.2);
-  border-radius:0 0 8px 8px;
-  box-shadow:0 18px 55px rgba(110,30,45,.18), 0 3px 10px rgba(110,30,45,.09);
-  display:flex;align-items:flex-end;justify-content:center;
-  padding-bottom:26px;
-}
-
-/* Bottom content: seal + bottom half text (visible when folded) */
-#bottomInner{
-  text-align:center;
-}
-#bottomInner .seal{
-  font-size:30px;
-  display:block;
-  margin-bottom:6px;
-  animation:sealPulse 3s ease-in-out infinite;
-}
-@keyframes sealPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
-
-/* Fold crease line between the two halves */
-#foldLine{
-  width:100%;
-  height:0;
-  position:relative;
-  z-index:10;
-}
-#foldLine::before{
-  content:'';
-  position:absolute;left:0;right:0;top:-1px;
-  height:2px;
-  background:linear-gradient(90deg,transparent 0%,rgba(180,110,120,.35) 20%,rgba(200,130,140,.5) 50%,rgba(180,110,120,.35) 80%,transparent 100%);
-  /* subtle shadow to simulate the crease */
-  box-shadow:0 1px 4px rgba(110,30,45,.12);
-}
-
-/* ── TOP HALF (folds down over bottom, then opens up) ── */
-/*
-  transform-origin: bottom = the fold line.
-  rotateX(180deg) = folded flat on top of bottom half (face down).
-  rotateX(0deg)   = fully open, flat above bottom half.
-*/
+/* ── TOP HALF outer — the thing that rotates ── */
 #halfTopOuter{
-  transform-origin: bottom center;
-  transform: rotateX(180deg);
-  transition: transform .95s cubic-bezier(.4,0,.15,1);
-  transform-style: preserve-3d;
+  transform-origin:bottom center;
+  transform:rotateX(180deg);          /* starts folded over bottom */
+  transition:transform 1s cubic-bezier(.4,0,.15,1);
+  transform-style:preserve-3d;
+  position:relative;                  /* needed for absolute back-face child */
 }
 #halfTopOuter.open{
-  transform: rotateX(0deg);
+  transform:rotateX(0deg);
 }
 
-/* front face of top half (the writing side) */
+/* ── FRONT face of top half (letter text) ── */
 #halfTop{
-  min-height:160px;
-  border-top:1px solid rgba(180,115,125,.2);
-  border-radius:8px 8px 0 0;
-  box-shadow:0 -4px 18px rgba(110,30,45,.09);
+  width:100%;
+  min-height:200px;
+  background:#fffaf6;
+  border:1px solid rgba(180,115,125,.15);
+  border-bottom:none;
+  border-radius:10px 10px 0 0;
   display:flex;align-items:flex-start;justify-content:center;
-  padding-top:26px;
-  /* backface hidden so you don't see through it when spinning */
+  padding:32px 36px 28px;
+  /* CRITICAL: hide when face-down */
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
+  position:relative;overflow:hidden;
+}
+/* ruled lines */
+#halfTop::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent,transparent 30px,rgba(200,140,150,.09) 30px,rgba(200,140,150,.09) 31px);
 }
 
-/* back face of top half (blank, shown while still folded) */
+/* ── BACK face of top half (blank paper back, visible while folded) ── */
 #halfTopBack{
-  position:absolute;inset:0;
-  background:linear-gradient(to bottom,#fde8ee,#fff2f5);
-  border-radius:8px 8px 0 0;
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  /* This element lives inside #halfTopOuter (preserve-3d).
+     We rotate it 180° on its OWN axis so it faces the opposite direction
+     from #halfTop — meaning it's visible exactly when #halfTop is hidden. */
+  transform:rotateX(180deg);
   backface-visibility:hidden;
   -webkit-backface-visibility:hidden;
-  transform:rotateX(180deg);
-  /* tiny texture lines to look like paper back */
+  background:linear-gradient(160deg,#fde8ee 0%,#fff0f3 50%,#fde4ea 100%);
+  border-radius:10px 10px 0 0;
+  border:1px solid rgba(180,115,125,.12);
+  border-bottom:none;
+  /* subtle paper texture */
   background-image:
-    linear-gradient(to bottom,#fde8ee,#fff2f5),
-    repeating-linear-gradient(0deg,transparent,transparent 22px,rgba(180,110,120,.06) 22px,rgba(180,110,120,.06) 23px);
+    linear-gradient(160deg,#fde8ee 0%,#fff0f3 50%,#fde4ea 100%),
+    repeating-linear-gradient(0deg,transparent,transparent 30px,rgba(180,110,120,.05) 30px,rgba(180,110,120,.05) 31px);
   background-blend-mode:normal;
 }
 
-/* ── LETTER TEXT ── */
-#topInner{
-  text-align:center;
-  padding:0 28px;
+/* ── FOLD CREASE ── */
+#foldLine{
+  width:100%;height:0;position:relative;z-index:10;
 }
-/* ✏️ EDIT THE LETTER TEXT INSIDE THE <p> IN THE HTML BELOW */
-#topInner p{
-  font-family:'Cormorant Garamond',serif;
-  font-size:clamp(16px,2.8vw,22px);
-  font-style:italic;font-weight:300;
-  color:#6a3040;line-height:1.78;letter-spacing:.35px;
+#foldLine::before{
+  content:'';position:absolute;left:0;right:0;top:-1px;height:2px;
+  background:linear-gradient(90deg,transparent,rgba(180,110,120,.4) 20%,rgba(210,130,145,.6) 50%,rgba(180,110,120,.4) 80%,transparent);
+  box-shadow:0 1px 5px rgba(110,30,45,.14),0 -1px 3px rgba(110,30,45,.08);
 }
 
-/* line ruling behind text (like real letter paper) */
-#halfBottom::before, #halfTop::before{
-  content:'';
-  position:absolute;inset:0;
-  background:repeating-linear-gradient(
-    to bottom,
-    transparent,
-    transparent 27px,
-    rgba(200,140,150,.10) 27px,
-    rgba(200,140,150,.10) 28px
-  );
-  pointer-events:none;
+/* ── BOTTOM HALF (never moves) ── */
+#halfBottom{
+  width:100%;
+  min-height:130px;
+  background:#fffaf6;
+  border:1px solid rgba(180,115,125,.15);
+  border-top:none;
+  border-radius:0 0 10px 10px;
+  box-shadow:0 22px 60px rgba(110,30,45,.17),0 4px 12px rgba(110,30,45,.09);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+#halfBottom::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(to bottom,transparent,transparent 30px,rgba(200,140,150,.09) 30px,rgba(200,140,150,.09) 31px);
+}
+#bottomInner{text-align:center}
+#bottomInner .seal{
+  font-size:36px;display:block;
+  filter:drop-shadow(0 2px 8px rgba(180,40,60,.2));
+  animation:sealPulse 3s ease-in-out infinite;
+}
+@keyframes sealPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+/* ── LETTER TEXT ── */
+#topInner{width:100%}
+/* ✏️ EDIT TEXT IN THE <p> BELOW */
+#topInner p{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(17px,2.6vw,22px);
+  font-style:italic;font-weight:300;
+  color:#6a3040;line-height:1.85;letter-spacing:.4px;
+  text-align:center;
 }
 
 </style>
@@ -357,7 +330,7 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
   </div>
   <div id="bouquetMsg">
     <!-- ✏️ EDIT MESSAGE HERE -->
-    <p>for you my love )</p>
+    <p>for you my love ♡</p>
   </div>
   <button id="arrowBtn" onclick="goToLetter()" aria-label="Open letter">
     <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
@@ -372,35 +345,32 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
     back
   </button>
 
-  <!--
-    LETTER STRUCTURE
-    ┌─────────────────┐  ← #halfTopOuter  (rotates around bottom edge = fold line)
-    │   TOP HALF      │     starts face-down ON the bottom half
-    │   (your text)   │     click → flips up flat above fold
-    ├─ ─ ─ ─ ─ ─ ─ ─ ┤  ← fold crease (#foldLine)
-    │  BOTTOM HALF    │     always visible / never moves
-    │   (seal ♡)      │
-    └─────────────────┘
-  -->
+  <div id="letterScene" onclick="unfoldLetter()">
 
-  <div id="letterWrap" onclick="unfoldLetter()">
-
-    <!-- TOP HALF wrapper — this is what rotates -->
+    <!--
+      TOP HALF — rotates around its bottom edge.
+      Starts at rotateX(180°): face-down ON the bottom half.
+        → #halfTop (text)    : backface-hidden → INVISIBLE to viewer
+        → #halfTopBack (pink): backface-hidden + own rotateX(180°) → VISIBLE to viewer
+      After click rotateX(0°):
+        → #halfTop (text)    : faces viewer → VISIBLE
+        → #halfTopBack       : faces away   → INVISIBLE
+    -->
     <div id="halfTopOuter">
-      <!-- back face (shown when still folded — blank paper back) -->
       <div id="halfTopBack"></div>
-      <!-- front face (shown when open — your letter text) -->
-      <div class="half" id="halfTop">
+      <div id="halfTop">
         <div id="topInner">
 
           <!-- ✏️✏️✏️ EDIT YOUR LETTER TEXT HERE ✏️✏️✏️ -->
           <p>
-            Happy 8 of March mon amour —<br>
-            I love you Amaliya <br>
-            Today more than any day before <br>
-            Thank you for coming into my life and for making me smile and laugh so much ) <br>
-            Avec tout mon amour, <br>
-            your boyfriend, Ruben <br>
+            Happy 8 of March mon amour —<br><br>
+            I love you Amaliya.<br>
+            Today more than any day before.<br><br>
+            Thank you for coming into my life<br>
+            and for making me smile<br>
+            and laugh so much )<br><br>
+            Avec tout mon amour,<br>
+            your boyfriend, Ruben ♡
           </p>
           <!-- ✏️✏️✏️ END EDITABLE ZONE ✏️✏️✏️ -->
 
@@ -408,11 +378,11 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
       </div>
     </div>
 
-    <!-- FOLD CREASE -->
+    <!-- fold crease -->
     <div id="foldLine"></div>
 
     <!-- BOTTOM HALF — never moves -->
-    <div class="half" id="halfBottom">
+    <div id="halfBottom">
       <div id="bottomInner">
         <span class="seal">♡</span>
       </div>
@@ -425,7 +395,7 @@ body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
 </div>
 
 <script>
-/* ── CONFETTI ── */
+/* CONFETTI */
 const canvas=document.getElementById('confettiCanvas'),ctx=canvas.getContext('2d');
 let pieces=[],animating=false;
 function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight}
@@ -433,87 +403,52 @@ resizeCanvas();addEventListener('resize',resizeCanvas);
 const COLS=['#f8b8c0','#f090a0','#e06070','#fde8a8','#ffd0e4','#b84055','#d4a0bc','#a8ccdc','#c8dca0','#f0d4a0'];
 function launchConfetti(fx,fy){
   resizeCanvas();const cx=fx??innerWidth/2,cy=fy??innerHeight/2;
-  for(let i=0;i<140;i++){
-    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*.9,spd=9+Math.random()*17;
-    pieces.push({x:cx+(Math.random()-.5)*40,y:cy,vx:Math.cos(a)*spd*(0.4+Math.random()),vy:Math.sin(a)*spd-Math.random()*3,w:5+Math.random()*8,h:9+Math.random()*12,color:COLS[Math.random()*COLS.length|0],rot:Math.random()*360,rotV:(Math.random()-.5)*11,grav:.32+Math.random()*.18,op:1,shape:Math.random()<.28?'dot':'rect'});
-  }
+  for(let i=0;i<140;i++){const a=-Math.PI/2+(Math.random()-.5)*Math.PI*.9,spd=9+Math.random()*17;pieces.push({x:cx+(Math.random()-.5)*40,y:cy,vx:Math.cos(a)*spd*(0.4+Math.random()),vy:Math.sin(a)*spd-Math.random()*3,w:5+Math.random()*8,h:9+Math.random()*12,color:COLS[Math.random()*COLS.length|0],rot:Math.random()*360,rotV:(Math.random()-.5)*11,grav:.32+Math.random()*.18,op:1,shape:Math.random()<.28?'dot':'rect'})}
   if(!animating){animating=true;requestAnimationFrame(tick)}
 }
 function tick(){
   ctx.clearRect(0,0,canvas.width,canvas.height);let live=false;
-  for(const p of pieces){
-    p.vy+=p.grav;p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vx*=.99;
-    if(p.y>canvas.height+30){p.op=0;continue}
-    if(p.y>canvas.height*.55)p.op=Math.max(0,p.op-.016);
-    if(p.op<=0)continue;live=true;
-    ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;
-    if(p.shape==='dot'){ctx.beginPath();ctx.arc(0,0,p.w/2,0,Math.PI*2);ctx.fill()}
-    else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
-    ctx.restore();
-  }
-  if(live)requestAnimationFrame(tick);
-  else{animating=false;pieces=[];ctx.clearRect(0,0,canvas.width,canvas.height)}
+  for(const p of pieces){p.vy+=p.grav;p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vx*=.99;if(p.y>canvas.height+30){p.op=0;continue}if(p.y>canvas.height*.55)p.op=Math.max(0,p.op-.016);if(p.op<=0)continue;live=true;ctx.save();ctx.globalAlpha=p.op;ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.fillStyle=p.color;if(p.shape==='dot'){ctx.beginPath();ctx.arc(0,0,p.w/2,0,Math.PI*2);ctx.fill()}else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore()}
+  if(live)requestAnimationFrame(tick);else{animating=false;pieces=[];ctx.clearRect(0,0,canvas.width,canvas.height)}
 }
 
-/* ── SPARKLES ── */
-function sparks(x,y,sym){
-  for(let i=0;i<8;i++){
-    const el=document.createElement('div');el.className='spark';el.textContent=sym;
-    el.style.left=(x+(Math.random()-.5)*80)+'px';
-    el.style.top=(y+(Math.random()-.5)*80)+'px';
-    el.style.fontSize=(9+Math.random()*14)+'px';
-    el.style.animationDuration=(.28+Math.random()*.38)+'s';
-    document.body.appendChild(el);setTimeout(()=>el.remove(),700);
-  }
-}
+/* SPARKLES */
+function sparks(x,y,sym){for(let i=0;i<8;i++){const el=document.createElement('div');el.className='spark';el.textContent=sym;el.style.left=(x+(Math.random()-.5)*80)+'px';el.style.top=(y+(Math.random()-.5)*80)+'px';el.style.fontSize=(9+Math.random()*14)+'px';el.style.animationDuration=(.28+Math.random()*.38)+'s';document.body.appendChild(el);setTimeout(()=>el.remove(),700)}}
 
-/* ── PAGE NAV ── */
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-}
+/* PAGE NAV */
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active')}
 
-/* ── BOX ── */
+/* BOX */
 let bc=0,boxLocked=false;
 function onBoxClick(e){
-  if(bc>=4||boxLocked)return;boxLocked=true;bc++;
-  sparks(e.clientX,e.clientY,'✦');
+  if(bc>=4||boxLocked)return;boxLocked=true;bc++;sparks(e.clientX,e.clientY,'✦');
   const hint=document.getElementById('boxHint');
   if(bc===1){document.getElementById('ribV').classList.add('gone');hint.textContent='✦ \u00A0again...\u00A0 ✦';setTimeout(()=>boxLocked=false,800)}
   else if(bc===2){document.getElementById('ribH').classList.add('gone');hint.textContent='✦ \u00A0once more...\u00A0 ✦';setTimeout(()=>boxLocked=false,800)}
   else if(bc===3){document.getElementById('bowEl').classList.add('gone');hint.textContent='✦ \u00A0open it!\u00A0 ✦';setTimeout(()=>boxLocked=false,800)}
-  else{
-    document.getElementById('lid').classList.add('open');
-    document.getElementById('boxHint').classList.add('off');
-    launchConfetti(e.clientX,e.clientY);
-    setTimeout(()=>{document.getElementById('pageBox').classList.add('exit');showPage('pageBouquet')},1100);
-  }
+  else{document.getElementById('lid').classList.add('open');document.getElementById('boxHint').classList.add('off');launchConfetti(e.clientX,e.clientY);setTimeout(()=>{document.getElementById('pageBox').classList.add('exit');showPage('pageBouquet')},1100)}
 }
 
-/* ── BOUQUET → LETTER ── */
-function goToLetter(){
-  document.getElementById('pageBouquet').classList.add('exit-left');
-  setTimeout(()=>showPage('pageLetter'),50);
-}
+/* BOUQUET → LETTER */
+function goToLetter(){document.getElementById('pageBouquet').classList.add('exit-left');setTimeout(()=>showPage('pageLetter'),50)}
 
-/* ── LETTER → BOUQUET ── */
+/* LETTER → BOUQUET */
 function goToBouquet(){
   document.getElementById('pageBouquet').classList.remove('exit-left');
   showPage('pageBouquet');
-  // reset letter
   letterOpened=false;
   document.getElementById('halfTopOuter').classList.remove('open');
   document.getElementById('letterHint').classList.remove('off');
 }
 
-/* ── LETTER UNFOLD ── */
+/* LETTER UNFOLD */
 let letterOpened=false;
 function unfoldLetter(){
   if(letterOpened)return;
   letterOpened=true;
   document.getElementById('halfTopOuter').classList.add('open');
   document.getElementById('letterHint').classList.add('off');
-  sparks(innerWidth/2, innerHeight/2,'♡');
+  sparks(innerWidth/2,innerHeight/2,'♡');
 }
 </script>
 </body>
