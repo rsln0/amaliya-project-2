@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bonne fête ❤️</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,500&family=Jost:wght@200;300;400&display=swap" rel="stylesheet"/>
+<style>
+
+/* ─── RESET ─── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:#fdf4f7;font-family:'Jost',sans-serif;color:#4a2a30}
+
+/* ─── CONFETTI CANVAS ─── */
+#confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:9000}
+
+/* ─── SPARKLE ─── */
+.spark{
+  position:fixed;pointer-events:none;z-index:9999;
+  animation:sparkPop .6s ease-out forwards;
+}
+@keyframes sparkPop{
+  0%  {opacity:1;transform:scale(.2) translateY(0)}
+  100%{opacity:0;transform:scale(2.5) translateY(-50px)}
+}
+
+/* ═══════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════ */
+.page{
+  position:fixed;inset:0;
+  transition:opacity .85s ease, transform .85s cubic-bezier(.4,0,.2,1);
+  will-change:transform,opacity;
+  pointer-events:none;
+}
+.page.active{pointer-events:auto}
+
+/* BOX PAGE */
+#pageBox{
+  z-index:30;opacity:1;transform:translateX(0);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  background:radial-gradient(ellipse at 45% 35%,#fce6ef,#fdf0f6 55%,#fef8f8);
+}
+#pageBox.active{pointer-events:auto}
+#pageBox.exit{opacity:0;transform:translateX(-70px)}
+
+/* BOUQUET PAGE */
+#pageBouquet{
+  z-index:20;opacity:0;transform:translateX(70px);
+  /* full screen flex: image centred, text pinned to bottom */
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;     /* image centred vertically */
+  background:radial-gradient(ellipse at 50% 42%,#fff0f4,#fdf4f8 58%,#fef9f9);
+}
+#pageBouquet.show{opacity:1;transform:translateX(0);pointer-events:auto}
+
+/* ─── BOX SVG ─── */
+#giftSVG{
+  width:min(70vmin,460px);height:auto;overflow:visible;
+  filter:drop-shadow(0 26px 58px rgba(110,30,45,.17)) drop-shadow(0 5px 13px rgba(110,30,45,.08));
+}
+#lid{transform-origin:200px 192px;transition:transform 1.3s cubic-bezier(.2,.05,.1,1)}
+#lid.open{transform:rotate(-110deg)}
+#ribV{transition:transform 1s cubic-bezier(.4,0,.2,1),opacity .9s}
+#ribV.gone{transform:translateY(-340px);opacity:0}
+#ribH{transition:transform 1s cubic-bezier(.4,0,.2,1),opacity .9s}
+#ribH.gone{transform:translateY(340px);opacity:0}
+#bowEl{transition:transform 1s cubic-bezier(.3,0,.2,1),opacity .9s;transform-box:fill-box;transform-origin:center}
+#bowEl.gone{transform:translateY(-50px) scale(.15);opacity:0}
+
+#boxHint{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:#b07080;font-weight:300;white-space:nowrap;
+  transition:opacity .4s;text-shadow:0 1px 8px rgba(255,255,255,.9);
+}
+#boxHint.off{opacity:0}
+
+/* ─── BOUQUET IMAGE ─── */
+/*
+  The image fills as much vertical space as possible while staying centred.
+  We give it a large max-height so it truly dominates the screen.
+*/
+.bq-img-wrap{
+  /* Push slightly above true centre so the text below has breathing room */
+  width:min(58vmin,400px);
+  flex-shrink:0;
+  /* Animate in after page transition */
+  opacity:0;transform:scale(.92) translateY(12px);
+  transition:opacity 1s ease .35s, transform 1s ease .35s;
+}
+#pageBouquet.show .bq-img-wrap{opacity:1;transform:scale(1) translateY(0)}
+
+.bq-img-wrap img{
+  width:100%;display:block;
+  filter:drop-shadow(0 20px 52px rgba(110,30,45,.24));
+  animation:gentleHover 5s ease-in-out infinite;
+}
+@keyframes gentleHover{
+  0%,100%{transform:translateY(0) rotate(-.8deg)}
+  50%    {transform:translateY(-10px) rotate(.8deg)}
+}
+
+/* ─── MESSAGE — pinned to bottom ─── */
+/*
+  This sits at the very bottom of the page, fixed so it
+  never overlaps the image no matter the screen size.
+*/
+#bouquetMsg{
+  position:fixed;
+  bottom:0; left:0; right:0;
+  padding:22px 20px 32px;
+  text-align:center;
+  /* subtle gradient fade up from bottom so it reads clean over any bg */
+  background:linear-gradient(to top, rgba(253,244,247,.98) 55%, rgba(253,244,247,0));
+  pointer-events:none;z-index:25;
+  opacity:0;transform:translateY(10px);
+  transition:opacity .9s ease .7s, transform .9s ease .7s;
+}
+#pageBouquet.show ~ #bouquetMsg,
+#bouquetMsg.show{opacity:1;transform:translateY(0)}
+
+/* ✏️ EDIT THIS TEXT */
+#bouquetMsg p{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(19px,3.8vw,30px);
+  font-style:italic;font-weight:300;
+  color:#7a3a48;letter-spacing:.5px;
+  line-height:1.45;
+}
+
+</style>
+</head>
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 1 — GIFT BOX
+═══════════════════════════════════════════ -->
+<div id="pageBox" class="page active" onclick="onBoxClick(event)">
+
+  <svg id="giftSVG" viewBox="0 0 400 460" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="gBox" x1="0" y1="0" x2=".2" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="100%" stop-color="#f2eded"/>
+      </linearGradient>
+      <linearGradient id="gLid" x1="0" y1="0" x2=".2" y2="1">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="100%" stop-color="#eeebeb"/>
+      </linearGradient>
+      <linearGradient id="gRibV" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%"   stop-color="#7a2030"/>
+        <stop offset="18%"  stop-color="#b85060"/>
+        <stop offset="38%"  stop-color="#e898a4"/>
+        <stop offset="50%"  stop-color="#f8bcc4"/>
+        <stop offset="62%"  stop-color="#e898a4"/>
+        <stop offset="82%"  stop-color="#b85060"/>
+        <stop offset="100%" stop-color="#7a2030"/>
+      </linearGradient>
+      <linearGradient id="gRibH" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%"   stop-color="#7a2030"/>
+        <stop offset="18%"  stop-color="#b85060"/>
+        <stop offset="38%"  stop-color="#e898a4"/>
+        <stop offset="50%"  stop-color="#f8bcc4"/>
+        <stop offset="62%"  stop-color="#e898a4"/>
+        <stop offset="82%"  stop-color="#b85060"/>
+        <stop offset="100%" stop-color="#7a2030"/>
+      </linearGradient>
+    </defs>
+
+    <!-- BOX BODY -->
+    <rect x="60" y="196" width="280" height="240" rx="5" fill="url(#gBox)"/>
+    <rect x="60" y="196" width="280" height="240" rx="5" fill="none" stroke="rgba(160,100,110,.09)" stroke-width="1"/>
+    <rect x="60"  y="196" width="7"   height="240" fill="rgba(0,0,0,.03)" rx="3"/>
+    <rect x="333" y="196" width="7"   height="240" fill="rgba(0,0,0,.02)" rx="3"/>
+    <rect x="66"  y="428" width="268" height="8"   rx="4" fill="rgba(0,0,0,.05)"/>
+    <rect x="60"  y="196" width="280" height="2"   rx="1" fill="rgba(255,255,255,.85)"/>
+
+    <!-- BOX LID -->
+    <g id="lid">
+      <rect x="50" y="138" width="300" height="62" rx="5" fill="url(#gLid)"/>
+      <rect x="50" y="138" width="300" height="62" rx="5" fill="none" stroke="rgba(160,100,110,.07)" stroke-width="1"/>
+      <rect x="50" y="138" width="300" height="3"  rx="2" fill="rgba(255,255,255,.9)"/>
+      <rect x="50" y="192" width="300" height="6"  rx="2" fill="rgba(0,0,0,.05)"/>
+    </g>
+
+    <!-- VERTICAL RIBBON -->
+    <g id="ribV">
+      <rect x="184" y="138" width="32" height="298" fill="url(#gRibV)"/>
+      <rect x="184" y="138" width="3"  height="298" fill="rgba(255,255,255,.2)"/>
+      <rect x="213" y="138" width="3"  height="298" fill="rgba(0,0,0,.07)"/>
+    </g>
+
+    <!-- HORIZONTAL RIBBON -->
+    <g id="ribH">
+      <rect x="50"  y="165" width="300" height="27" fill="url(#gRibH)"/>
+      <rect x="50"  y="165" width="300" height="2"  fill="rgba(255,255,255,.2)"/>
+      <rect x="50"  y="190" width="300" height="2"  fill="rgba(0,0,0,.06)"/>
+      <rect x="60"  y="295" width="280" height="29" fill="url(#gRibH)"/>
+      <rect x="60"  y="295" width="280" height="2"  fill="rgba(255,255,255,.2)"/>
+      <rect x="60"  y="322" width="280" height="2"  fill="rgba(0,0,0,.06)"/>
+    </g>
+
+    <!-- BOW -->
+    <g id="bowEl">
+      <path d="M194,154 Q180,172 168,188" stroke="url(#gRibV)" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <path d="M194,154 Q180,172 168,188" stroke="rgba(255,255,255,.26)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M206,154 Q220,172 232,188" stroke="url(#gRibV)" stroke-width="18" fill="none" stroke-linecap="round"/>
+      <path d="M206,154 Q220,172 232,188" stroke="rgba(255,255,255,.26)" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M200,148 C192,134 158,102 134,94 C112,87 100,100 106,115 C112,130 140,136 164,143 C180,147 196,149 200,148Z" fill="url(#gRibV)" stroke="#6a1828" stroke-width=".8"/>
+      <path d="M199,146 C189,132 156,104 136,96 C118,89 108,101 111,113" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M200,148 C208,134 242,102 266,94 C288,87 300,100 294,115 C288,130 260,136 236,143 C220,147 204,149 200,148Z" fill="url(#gRibV)" stroke="#6a1828" stroke-width=".8"/>
+      <path d="M201,146 C211,132 244,104 264,96 C282,89 292,101 289,113" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="5" stroke-linecap="round"/>
+      <ellipse cx="200" cy="148" rx="17" ry="13" fill="url(#gRibH)" stroke="#6a1828" stroke-width="1"/>
+      <ellipse cx="200" cy="148" rx="8"  ry="6"  fill="rgba(210,80,95,.55)"/>
+      <ellipse cx="196" cy="144" rx="5"  ry="3"  fill="rgba(255,255,255,.3)"/>
+    </g>
+  </svg>
+
+  <div id="boxHint">✦ &nbsp;clique pour ouvrir&nbsp; ✦</div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 2 — BOUQUET (full screen, text fixed at bottom)
+═══════════════════════════════════════════ -->
+<div id="pageBouquet" class="page">
+
+  <!--
+    ✏️ REPLACE src WITH YOUR IMAGE PATH
+       e.g.  src="bouquet.png"  or  src="myimage.jpg"
+  -->
+  <div class="bq-img-wrap">
+    <img src="bouquet.png" alt="Bouquet"
+         onerror="this.style.opacity='.3'"/>
+  </div>
+
+</div>
+
+<!-- Message fixed to bottom, shows with bouquet page -->
+<div id="bouquetMsg">
+  <!-- ✏️ EDIT YOUR TEXT HERE -->
+  <p>for you my love )</p>
+</div>
+
+<script>
+/* ═══════════════════════════════════════
+   CONFETTI CANVAS
+═══════════════════════════════════════ */
+const canvas=document.getElementById('confettiCanvas');
+const ctx=canvas.getContext('2d');
+let pieces=[],animating=false;
+function resizeCanvas(){canvas.width=innerWidth;canvas.height=innerHeight}
+resizeCanvas();addEventListener('resize',resizeCanvas);
+
+const COLS=['#f8b8c0','#f090a0','#e06070','#fde8a8','#ffd0e4',
+            '#b84055','#d4a0bc','#a8ccdc','#c8dca0','#f0d4a0'];
+
+function launchConfetti(fromX,fromY){
+  resizeCanvas();
+  const cx=fromX??innerWidth/2, cy=fromY??innerHeight/2;
+  for(let i=0;i<140;i++){
+    const a=-Math.PI/2+(Math.random()-.5)*Math.PI*.9;
+    const spd=9+Math.random()*17;
+    pieces.push({
+      x:cx+(Math.random()-.5)*40,y:cy,
+      vx:Math.cos(a)*spd*(0.4+Math.random()),
+      vy:Math.sin(a)*spd-Math.random()*3,
+      w:5+Math.random()*8,h:9+Math.random()*12,
+      color:COLS[Math.random()*COLS.length|0],
+      rot:Math.random()*360,rotV:(Math.random()-.5)*11,
+      grav:.32+Math.random()*.18,op:1,
+      shape:Math.random()<.28?'dot':'rect'
+    });
+  }
+  if(!animating){animating=true;requestAnimationFrame(tick)}
+}
+
+function tick(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  let live=false;
+  for(const p of pieces){
+    p.vy+=p.grav;p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vx*=.99;
+    if(p.y>canvas.height+30){p.op=0;continue}
+    if(p.y>canvas.height*.55)p.op=Math.max(0,p.op-.016);
+    if(p.op<=0)continue;
+    live=true;
+    ctx.save();ctx.globalAlpha=p.op;
+    ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);
+    ctx.fillStyle=p.color;
+    if(p.shape==='dot'){ctx.beginPath();ctx.arc(0,0,p.w/2,0,Math.PI*2);ctx.fill()}
+    else ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    ctx.restore();
+  }
+  if(live)requestAnimationFrame(tick);
+  else{animating=false;pieces=[];ctx.clearRect(0,0,canvas.width,canvas.height)}
+}
+
+/* ═══════════════════════════════════════
+   SPARKLES
+═══════════════════════════════════════ */
+function sparks(x,y,sym){
+  for(let i=0;i<8;i++){
+    const el=document.createElement('div');
+    el.className='spark';el.textContent=sym;
+    el.style.left=(x+(Math.random()-.5)*80)+'px';
+    el.style.top=(y+(Math.random()-.5)*80)+'px';
+    el.style.fontSize=(9+Math.random()*14)+'px';
+    el.style.animationDuration=(.28+Math.random()*.38)+'s';
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),700);
+  }
+}
+
+/* ═══════════════════════════════════════
+   BOX CLICKS
+═══════════════════════════════════════ */
+let bc=0,boxLocked=false;
+
+function onBoxClick(e){
+  if(bc>=4||boxLocked)return;
+  boxLocked=true;bc++;
+  sparks(e.clientX,e.clientY,'✦');
+  const hint=document.getElementById('boxHint');
+
+  if(bc===1){
+    document.getElementById('ribV').classList.add('gone');
+    hint.textContent='✦ \u00A0encore...\u00A0 ✦';
+    setTimeout(()=>boxLocked=false,800);
+  }
+  else if(bc===2){
+    document.getElementById('ribH').classList.add('gone');
+    hint.textContent='✦ \u00A0encore...\u00A0 ✦';
+    setTimeout(()=>boxLocked=false,800);
+  }
+  else if(bc===3){
+    document.getElementById('bowEl').classList.add('gone');
+    hint.textContent='✦ \u00A0ouvre-la !\u00A0 ✦';
+    setTimeout(()=>boxLocked=false,800);
+  }
+  else if(bc===4){
+    openBox(e);
+  }
+}
+
+function openBox(e){
+  document.getElementById('lid').classList.add('open');
+  document.getElementById('boxHint').classList.add('off');
+  launchConfetti(e.clientX,e.clientY);
+
+  setTimeout(()=>{
+    document.getElementById('pageBox').classList.add('exit');
+    document.getElementById('pageBouquet').classList.add('show');
+    document.getElementById('bouquetMsg').classList.add('show');
+  },1100);
+}
+</script>
+</body>
+</html>
